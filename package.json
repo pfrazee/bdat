@@ -1,0 +1,31 @@
+{
+  "name": "bdat",
+  "version": "1.0.0",
+  "description": "Beaker Dat CLI tool. Wraps Dat with new commands for Beaker.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pfraze/bdat.git"
+  },
+  "keywords": [
+    "dat",
+    "beaker",
+    "cli"
+  ],
+  "author": "Paul Frazee <pfrazee@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pfraze/bdat/issues"
+  },
+  "homepage": "https://github.com/pfraze/bdat#readme",
+  "dependencies": {
+    "dat": "^11.0.2",
+    "level": "^1.4.0",
+    "minimist": "^1.2.0",
+    "mkdirp": "^0.5.1",
+    "semver": "^5.2.0"
+  }
+}
