@@ -1,6 +1,7 @@
 # bdat
 
 Wraps https://github.com/maxogden/dat with new commands.
+Used by https://github.com/pfraze/beaker.
 
 Currently adds: `version`.
 
@@ -34,4 +35,11 @@ general options
   --doctor              run dat doctor
   --quiet, -q           output only dat-link, no progress information
   --debug               show debugging output
-  ```
+```
+
+## About the additions
+
+### version
+
+The `version` command writes a semver to `.bdat-version`.
+Beaker scans the hyperdrive feed for changes to that file, to detect version updates.
