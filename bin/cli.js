@@ -26,8 +26,10 @@ if (args.version) {
 var isShare = false
 var isDownload = false
 
-if (args.doctor || !args._[0] || args._[0] == 'version') {
+if (args.doctor || !args._[0]) {
   run()
+} else if (args._[0] == 'version') {
+  getDatDb()
 } else {
   getCommand()
 }

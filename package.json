@@ -22,10 +22,13 @@
   },
   "homepage": "https://github.com/pfraze/bdat#readme",
   "dependencies": {
+    "bdat-versions-file": "^1.0.0",
     "dat": "^11.0.2",
+    "hyperdrive": "^6.6.2",
     "level": "^1.4.0",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
+    "random-access-file": "^1.2.0",
     "semver": "^5.2.0"
   }
 }
