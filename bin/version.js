@@ -4,6 +4,7 @@ var semver = require('semver')
 var hyperdrive = require('hyperdrive')
 var raf = require('random-access-file')
 var vfilelib = require('bdat-versions-file')
+var stringToStream = require('string-to-stream')
 
 const VFILENAME = '.bdat-versions'
 
@@ -55,15 +56,18 @@ module.exports = function (args) {
 
         // write to file
         try {
-          fs.writeFileSync(vfilePath, vfile.toString(), 'utf-8')
+          vfileData = vfile.toString()
+          fs.writeFileSync(vfilePath, vfileData, 'utf-8')
         } catch (e) {
           console.log('Failed to write new version')
           console.log(e)
           process.exit(1)
         }
 
-        // update dat db
-        archive.append({type: 'file', name: VFILENAME}, () => {
+        // write to dat db
+        var s = stringToStream(vfileData)
+        s.pipe(archive.createFileWriteStream({type: 'file', name: VFILENAME}))
+        s.on('end', () => {
           // done
           console.log('Dat version updated:', vfile.current)
           process.exit(0)
