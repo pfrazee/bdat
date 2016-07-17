@@ -7,11 +7,13 @@ bdat <directory>
 
 bdat version 
 
-  get the current version
+  get the current version of the directory
 
-bdat version major|minor|patch|prerelease|<semver>
+bdat publish [major|minor|patch|prerelease|<semver>] [-m ""]
 
-  write a new version to the dat
+  publish a new version of the directory
+
+  --message, -m         include a message
 
 bdat <dat-link> <directory>
 

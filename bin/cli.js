@@ -1,14 +1,17 @@
 #!/usr/bin/env node
-var path = require('path')
-var level = require('level')
+
+var fs = require('fs')
 var mkdirp = require('mkdirp')
 
 var args = require('minimist')(process.argv.splice(2), {
-  alias: {p: 'port', q: 'quiet', v: 'version'},
-  boolean: ['snapshot', 'exit', 'list', 'quiet', 'version']
+  alias: {p: 'port', q: 'quiet', v: 'version', m: 'message'},
+  boolean: ['snapshot', 'exit', 'list', 'quiet', 'version'],
+  default: {
+    logspeed: 200
+  }
 })
 
-process.title = 'bdat'
+process.title = 'dat'
 
 // set debug before requiring other modules
 if (args.debug) {
@@ -18,7 +21,7 @@ if (args.debug) {
 }
 
 if (args.version) {
-  var pkg = require('./package.json')
+  var pkg = require('../package.json')
   console.log(pkg.version)
   process.exit(0)
 }
@@ -26,85 +29,46 @@ if (args.version) {
 var isShare = false
 var isDownload = false
 
-if (args.doctor || !args._[0]) {
-  run()
-} else if (args._[0] == 'version') {
-  getDatDb()
-} else {
-  getCommand()
-}
+args.logspeed = +args.logspeed
+if (isNaN(args.logspeed)) args.logspeed = 200
+
+if (args.doctor || !args._[0] || ['version', 'publish'].includes(args._[0])) run()
+else getCommand()
 
 function run () {
-  if (args.doctor) {
-    require('dat/bin/doctor')(args)
-  } else if (isShare) {
-    require('dat/bin/share')(args)
-  } else if (args.list && isDownload) {
-    require('dat/bin/list')(args)
-  } else if (isDownload) {
-    require('dat/bin/download')(args)
-  } else if (args._[0] == 'version') {
-    require('./version')(args)
-  } else {
-    require('../usage')('root.txt')
-  }
+  if (args.doctor) require('dat/bin/doctor')(args)
+  else if (isShare) require('dat/commands/share')(args)
+  else if (args.list && isDownload) require('dat/commands/list')(args)
+  else if (args._[0] == 'version') require('../commands/version')(args)
+  else if (args._[0] == 'publish') require('../commands/publish')(args)
+  else if (isDownload) require('dat/commands/download')(args)
+  else require('../usage')('root.txt')
 }
 
 function getCommand () {
+  if (args._[0].indexOf('dat://') > -1) args._[0] = args._[0].replace('dat://', '')
   if (isDirectory(args._[0], true)) isShare = true
   else if (isDatLink(args._[0])) isDownload = true
   args.dir = isShare ? args._[0] : args._[1]
   args.key = isDownload ? args._[0] : null
 
-  if (isShare || isDownload) getDatDb()
-  else run()
-}
-
-function getDatDb () {
-  var dir = args.dir || '.'
-  args.datDb = args.datDb || path.join(dir, '.dat')
-
-  var isNewDownload = (isDownload && !isDirectory(args.datDb, true))
-  if (isNewDownload) {
-    if (dir !== '.') mkdirp.sync(args.datDb)
-    args.level = level(args.datDb)
-    run()
-  } else {
-    if (isDownload) args.dir = '.' // resume download in cwd
-    checkResume()
-  }
-
-  function checkResume () {
-    var db = args.level = level(args.datDb)
-    if (args.port) db.put('!dat!port', args.port)
-    db.get('!dat!key', function (err, value) {
-      if (err) return run()
-      if (isDownload && args.key !== value) {
-        // TODO: prompt to overwrite existing dat
-        console.error('Existing .dat folder does not match key.')
-        process.exit(0)
-      }
-      args.key = value
-      args.resume = true
-      db.get('!dat!port', function (err, portVal) {
-        if (err) return run()
-        if (portVal) args.port = portVal
-        run()
-      })
-    })
-  }
+  if (isShare) run()
+  else if (args.dir && isDownload && !isDirectory(args.dir, true)) mkdirp(args.dir, run)
+  else if (args.dir && isDownload) run()
+  else if (!args.dir) onerror('Directory required') // TODO: don't require for download
+  else onerror('Invalid Command') // Should never get here...
 }
 
 function isDatLink (val, quiet) {
-  // TODO: support dat.land link
-  var isLink = (val.length === 64)
+  // TODO: switch to using dat-encoding here
+  var isLink = (val.length === 50 || val.length === 64)
   if (quiet || isLink) return isLink
   onerror('Invalid Dat Link')
 }
 
 function isDirectory (val, quiet) {
   try {
-    return require('fs').statSync(val).isDirectory() // TODO: support sharing single files
+    return fs.statSync(val).isDirectory() // TODO: support sharing single files
   } catch (err) {
     if (quiet) return false
     onerror('Directory does not exist')
@@ -113,5 +77,6 @@ function isDirectory (val, quiet) {
 
 function onerror (msg) {
   console.error(msg + '\n')
-  require('../usage')('root.txt')
+  process.exit(1)
+  // require('../usage')('root.txt')
 }
